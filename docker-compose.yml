@@ -4,10 +4,12 @@ services:
     build: ./api
     networks:
       - internal
+      - frontend
     depends_on:
       - db
 
   db:
+    container_name: forumDB
     image: postgres:latest
     environment:
       POSTGRES_USER: user
@@ -16,13 +18,27 @@ services:
     networks:
       - internal
     volumes:
-      - ./api/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
+  thread:
+    container_name: forum_thread
+    build: threadd
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+    networks:
+      - frontend
+
+
 networks:
   internal:
+    driver: bridge
+    internal: true
+  frontend:
     driver: bridge
 
 volumes:
