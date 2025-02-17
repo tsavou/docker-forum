@@ -34,3 +34,30 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
     console.log(`listening at http://localhost:${port}`);
 });
+
+
+// créer un message
+app.post('/messages', async (req, res) => {
+    const { pseudo, message } = req.body;
+    try {
+        const result = await pool.query(
+            'INSERT INTO messages (pseudo, message) VALUES ($1, $2) RETURNING *',
+            [pseudo, message]
+        );
+        res.status(201).json(result.rows[0]);
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
+    }
+});
+
+// récup les messages
+app.get('/messages', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM messages');
+        res.json(result.rows);
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(500);
+    }
+});
