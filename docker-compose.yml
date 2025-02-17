@@ -16,7 +16,10 @@ services:
     networks:
       - internal
     volumes:
+      - ./api/init.sql:/docker-entrypoint-initdb.d/init.sql
       - db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
 
 networks:
   internal:
