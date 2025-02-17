@@ -33,6 +33,15 @@ services:
     networks:
       - frontend
 
+  sender:
+    container_name: forum_sender
+    build: ./sender
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+    networks:
+      - frontend
 
 networks:
   internal:
