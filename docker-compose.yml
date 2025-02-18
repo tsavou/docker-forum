@@ -50,8 +50,8 @@ services:
 networks:
   internal:
     driver: bridge
+    internal: true
   frontend:
     driver: bridge
-
 volumes:
   db-data:
