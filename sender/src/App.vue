@@ -8,7 +8,7 @@ const message = ref('');
 
 const sendMessage = async () => {
   try {
-    await axios.post('http://api:3000/messages', {
+    await axios.post('http://localhost:3000/messages', {
       pseudo: pseudo.value,
       message: message.value,
     });

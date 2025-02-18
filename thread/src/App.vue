@@ -6,7 +6,8 @@ const messages = ref([]);
 
 const fetchMessages = async () => {
   try {
-   messages.value = await axios.get('http://localhost:3000/messages');
+   const response = await axios.get('http://localhost:3000/messages');
+   messages.value = response.data;
   } catch (error) {
     console.error('Erreur lors de la récupération des messages:', error);
   }
