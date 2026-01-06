@@ -22,21 +22,25 @@ Ce projet est un forum anonyme permettant aux utilisateurs de publier et consult
 ## 📚 Installation et utilisation
 
 ### 1️⃣ Prérequis
+
 - Docker
 - Docker Compose
 
 ### 2️⃣ Cloner le dépôt
+
 ```bash
-git clone <URL_DU_DEPOT>
-cd forum-anonyme
+git clone https://github.com/tsavou/docker-forum.git
+cd docker-forum
 ```
 
 ### 3️⃣ Lancer les conteneurs
+
 ```bash
 docker-compose up --build
 ```
 
 ### 4️⃣ Accéder aux services
+
 ```bash
 docker-compose up --build
 ```
