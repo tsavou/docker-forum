@@ -1,10 +1,10 @@
 <script setup>
-import { onMounted, ref } from "vue";
-import axios from "axios";
+import { onMounted, ref } from 'vue';
+import axios from 'axios';
 
 // --- État ---
-const pseudo = ref("");
-const message = ref("");
+const pseudo = ref('');
+const message = ref('');
 const messages = ref([]);
 const isSending = ref(false); // Pour gérer l'état du bouton
 
@@ -12,11 +12,11 @@ const isSending = ref(false); // Pour gérer l'état du bouton
 
 const fetchMessages = async () => {
   try {
-    const response = await axios.get("http://localhost:3000/messages");
+    const response = await axios.get('http://localhost:3000/messages');
     // On inverse l'ordre pour voir les nouveaux messages en haut (optionnel)
     messages.value = response.data.reverse();
   } catch (error) {
-    console.error("Erreur lors de la récupération des messages:", error);
+    console.error('Erreur lors de la récupération des messages:', error);
   }
 };
 
@@ -25,37 +25,37 @@ const sendMessage = async () => {
 
   isSending.value = true;
   try {
-    await axios.post("http://localhost:3000/messages", {
+    await axios.post('http://localhost:3000/messages', {
       pseudo: pseudo.value,
       message: message.value,
     });
 
-    message.value = "";
+    message.value = '';
 
     await fetchMessages();
   } catch (error) {
     console.error("Erreur lors de l'envoi du message:", error);
-    alert("Une erreur est survenue.");
+    alert('Une erreur est survenue.');
   } finally {
     isSending.value = false;
   }
 };
 
 const handleKeyDown = (event) => {
-  if (event.key === "Enter" && !event.shiftKey) {
+  if (event.key === 'Enter' && !event.shiftKey) {
     event.preventDefault();
     sendMessage();
   }
 };
 
 const formatDate = (dateString) => {
-  if (!dateString) return "";
+  if (!dateString) return '';
   const date = new Date(dateString);
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "numeric",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(date);
 };
 
@@ -74,7 +74,7 @@ onMounted(() => {
       </header>
 
       <section class="card input-card">
-        <form @submit.prevent="sendMessage" class="message-form">
+        <form class="message-form" @submit.prevent="sendMessage">
           <div class="input-group">
             <label for="pseudo">Pseudo</label>
             <input
@@ -91,11 +91,11 @@ onMounted(() => {
             <textarea
               id="message"
               v-model="message"
-              @keydown="handleKeyDown"
               placeholder="Qu'avez-vous à partager ?"
               required
               rows="3"
               class="input-field textarea-field"
+              @keydown="handleKeyDown"
             ></textarea>
           </div>
           <div class="form-actions">
@@ -140,10 +140,10 @@ onMounted(() => {
   min-height: 100vh;
   padding: 40px 20px;
   font-family:
-    "Inter",
+    'Inter',
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     Roboto,
     sans-serif;
   color: #1f2937;
