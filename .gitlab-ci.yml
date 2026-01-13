@@ -6,8 +6,6 @@ stages:
   - test
   - build
 
-# Templates de jobs avec anchors pour éviter la duplication
-# Template de job pour les jobs API
 .api_job_template: &api_job_template
   cache:
     key:
@@ -20,7 +18,6 @@ stages:
         - api/**/*
         - .gitlab-ci.yml
 
-# Template de job pour les jobs Front
 .front_job_template: &front_job_template
   cache:
     key:
@@ -86,3 +83,35 @@ test-e2e:
     paths:
       - front/playwright-report/
     expire_in: 1 week
+
+
+.build_template:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "🐳 Construction de l'image $APP_NAME..."
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $IMAGE_NAME:latest $CONTEXT_DIR/
+    - echo "⬆️ Envoi vers le registre..."
+    - docker push $IMAGE_NAME --all-tags
+
+build-api:
+  extends: .build_template
+  variables:
+    APP_NAME: "API"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/api  
+    CONTEXT_DIR: api                    
+  rules:
+    - changes: [api/**/*, .gitlab-ci.yml]
+
+build-front:
+  extends: .build_template
+  variables:
+    APP_NAME: "Front"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/front 
+    CONTEXT_DIR: front                   
+  rules:
+    - changes: [front/**/*, .gitlab-ci.yml]
