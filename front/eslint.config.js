@@ -28,6 +28,15 @@ export default [
   },
 
   {
-    ignores: ['node_modules/**', 'dist/**', 'build/**', '*.log', '.DS_Store', 'coverage/**'],
+    ignores: [
+      'node_modules/**',
+      'dist/**',
+      'build/**',
+      '*.log',
+      '.DS_Store',
+      'coverage/**',
+      'playwright.config.js',
+      'vitest.config.js',
+    ],
   },
 ];

@@ -77,3 +77,21 @@ test-front:
     - changes:
         - front/**/*
         - .gitlab-ci.yml
+
+test-e2e:
+  stage: test
+  # On utilise l'image qui contient déjà les navigateurs
+  image: mcr.microsoft.com/playwright:v1.49.1-jammy
+  script:
+    - echo "🧪 Démarrage des tests E2E..."
+    - cd front
+    - npm ci --cache .npm --prefer-offline
+    - npx playwright install --with-deps
+    - npm run test:e2e
+  artifacts:
+    when: always
+    paths:
+      - front/playwright-report/
+    expire_in: 1 week
+  rules:
+    - changes: [front/**/*, .gitlab-ci.yml]
