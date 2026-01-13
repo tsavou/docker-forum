@@ -10,7 +10,10 @@
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "format": "prettier --write \"src/**/*.{js,vue,json,css,scss,md}\"",
-    "format:check": "prettier --check \"src/**/*.{js,vue,json,css,scss,md}\""
+    "format:check": "prettier --check \"src/**/*.{js,vue,json,css,scss,md}\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui"
   },
   "dependencies": {
     "axios": "^1.7.9",
@@ -20,11 +23,14 @@
     "@eslint/js": "^9.39.2",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/eslint-config-prettier": "^10.2.0",
+    "@vue/test-utils": "^2.4.6",
     "eslint": "^9.39.2",
     "eslint-plugin-vue": "^9.33.0",
     "globals": "^17.0.0",
+    "jsdom": "^25.0.1",
     "prettier": "^3.5.1",
     "vite": "^6.1.0",
-    "vite-plugin-vue-devtools": "^7.7.2"
+    "vite-plugin-vue-devtools": "^7.7.2",
+    "vitest": "^4.0.17"
   }
 }
