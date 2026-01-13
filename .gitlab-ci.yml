@@ -4,81 +4,74 @@ image: node:20-alpine
 stages:
   - validation
   - test
+  - build
 
-lint-api:
-  stage: validation
+# Templates de jobs avec anchors pour éviter la duplication
+# Template de job pour les jobs API
+.api_job_template: &api_job_template
   cache:
     key:
       files:
         - api/package-lock.json
     paths:
       - api/.npm/
-  script:
-    - echo "🚀 Démarrage de la validation API..."
-    - cd api
-    - npm ci --cache .npm --prefer-offline
-    - npm run lint:check
   rules:
     - changes:
         - api/**/*
         - .gitlab-ci.yml
 
-test-api:
-  stage: test
-  cache:
-    key:
-      files:
-        - api/package-lock.json
-    paths:
-      - api/.npm/
-  script:
-    - echo "🧪 Démarrage des tests API..."
-    - cd api
-    - npm ci --cache .npm --prefer-offline
-    - npm test
-  rules:
-    - changes:
-        - api/**/*
-        - .gitlab-ci.yml
-
-lint-front:
-  stage: validation
+# Template de job pour les jobs Front
+.front_job_template: &front_job_template
   cache:
     key:
       files:
         - front/package-lock.json
     paths:
       - front/.npm/
+  rules:
+    - changes:
+        - front/**/*
+        - .gitlab-ci.yml
+
+lint-api:
+  <<: *api_job_template
+  stage: validation
+  script:
+    - echo "🚀 Démarrage de la validation API..."
+    - cd api
+    - npm ci --cache .npm --prefer-offline
+    - npm run lint:check
+
+test-api:
+  <<: *api_job_template
+  stage: test
+  script:
+    - echo "🧪 Démarrage des tests API..."
+    - cd api
+    - npm ci --cache .npm --prefer-offline
+    - npm test
+
+lint-front:
+  <<: *front_job_template
+  stage: validation
   script:
     - echo "🎨 Démarrage de la validation Front..."
     - cd front
     - npm ci --cache .npm --prefer-offline
     - npm run lint:check
     - npm run format:check
-  rules:
-    - changes:
-        - front/**/*
-        - .gitlab-ci.yml
 
 test-front:
+  <<: *front_job_template
   stage: test
-  cache:
-    key:
-      files:
-        - front/package-lock.json
-    paths:
-      - front/.npm/
   script:
     - echo "🧪 Démarrage des tests Front..."
     - cd front
     - npm ci --cache .npm --prefer-offline
     - npm test
-  rules:
-    - changes:
-        - front/**/*
-        - .gitlab-ci.yml
 
 test-e2e:
+  <<: *front_job_template
   stage: test
   # On utilise l'image qui contient déjà les navigateurs
   image: mcr.microsoft.com/playwright:v1.49.1-jammy
@@ -93,5 +86,3 @@ test-e2e:
     paths:
       - front/playwright-report/
     expire_in: 1 week
-  rules:
-    - changes: [front/**/*, .gitlab-ci.yml]
