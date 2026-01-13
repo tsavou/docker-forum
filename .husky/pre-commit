@@ -1,0 +1,43 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Récupérer les fichiers staged
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+
+# Vérifier si des fichiers de l'API ont été modifiés
+API_CHANGED=$(echo "$STAGED_FILES" | grep -E "^api/" | grep -vE "\.(lock|log)$" || true)
+
+# Vérifier si des fichiers du frontend ont été modifiés
+FRONT_CHANGED=$(echo "$STAGED_FILES" | grep -E "^front/" | grep -vE "\.(lock|log)$" || true)
+
+# Valider l'API si des fichiers ont été modifiés
+if [ -n "$API_CHANGED" ]; then
+  echo "🔍 Validation de l'API..."
+  cd api
+  if [ -f "package.json" ]; then
+    npm run lint:check || {
+      echo "❌ Erreur de linting dans l'API. Corrigez les erreurs avant de committer."
+      exit 1
+    }
+  fi
+  cd ..
+fi
+
+# Valider le frontend si des fichiers ont été modifiés
+if [ -n "$FRONT_CHANGED" ]; then
+  echo "🎨 Validation du frontend..."
+  cd front
+  if [ -f "package.json" ]; then
+    npm run lint:check || {
+      echo "❌ Erreur de linting dans le frontend. Corrigez les erreurs avant de committer."
+      exit 1
+    }
+    npm run format:check || {
+      echo "❌ Erreur de formatage dans le frontend. Exécutez 'npm run format' pour corriger."
+      exit 1
+    }
+  fi
+  cd ..
+fi
+
+echo "✅ Toutes les validations sont passées !"
