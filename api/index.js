@@ -10,17 +10,32 @@ app.use(cors());
 app.use(express.json());
 
 //config bdd
-const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-})
+let pool;
+if (process.env.NODE_ENV === 'test') {
+    // Pool mock pour les tests (sera remplacé dans les tests)
+    pool = {
+        query: async () => {
+            throw new Error('Pool not mocked in test');
+        }
+    };
+} else {
+    pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+    });
+}
 
 app.get('/', (req, res) => {
     res.send('API is running');
 });
 
-app.listen(port, () => {
-    console.log(`listening at http://localhost:${port}`);
-});
+// Exporter l'app pour les tests
+if (require.main === module) {
+    app.listen(port, () => {
+        console.log(`listening at http://localhost:${port}`);
+    });
+}
+
+module.exports = app;
 
 // créer un message
 app.post('/messages', async (req, res) => {
@@ -47,3 +62,6 @@ app.get('/messages', async (req, res) => {
         res.sendStatus(500);
     }
 });
+
+// Exporter le pool pour permettre le mock dans les tests
+module.exports.pool = pool;

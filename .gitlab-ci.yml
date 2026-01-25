@@ -1,0 +1,152 @@
+
+image: node:20-alpine
+
+stages:
+  - validation
+  - test
+  - build
+  - deploy
+
+.api_job_template: &api_job_template
+  cache:
+    key:
+      files:
+        - api/package-lock.json
+    paths:
+      - api/.npm/
+  rules:
+    - changes:
+        - api/**/*
+        - .gitlab-ci.yml
+
+.front_job_template: &front_job_template
+  cache:
+    key:
+      files:
+        - front/package-lock.json
+    paths:
+      - front/.npm/
+  rules:
+    - changes:
+        - front/**/*
+        - .gitlab-ci.yml
+
+lint-api:
+  <<: *api_job_template
+  stage: validation
+  script:
+    - echo "🚀 Démarrage de la validation API..."
+    - cd api
+    - npm ci --cache .npm --prefer-offline
+    - npm run lint:check
+
+test-api:
+  <<: *api_job_template
+  stage: test
+  script:
+    - echo "🧪 Démarrage des tests API..."
+    - cd api
+    - npm ci --cache .npm --prefer-offline
+    - npm test
+
+lint-front:
+  <<: *front_job_template
+  stage: validation
+  script:
+    - echo "🎨 Démarrage de la validation Front..."
+    - cd front
+    - npm ci --cache .npm --prefer-offline
+    - npm run lint:check
+    - npm run format:check
+
+test-front:
+  <<: *front_job_template
+  stage: test
+  script:
+    - echo "🧪 Démarrage des tests Front..."
+    - cd front
+    - npm ci --cache .npm --prefer-offline
+    - npm test
+
+test-e2e:
+  <<: *front_job_template
+  stage: test
+  # On utilise l'image qui contient déjà les navigateurs
+  image: mcr.microsoft.com/playwright:v1.49.1-jammy
+  script:
+    - echo "🧪 Démarrage des tests E2E..."
+    - cd front
+    - npm ci --cache .npm --prefer-offline
+    - npx playwright install --with-deps
+    - npm run test:e2e
+  artifacts:
+    when: always
+    paths:
+      - front/playwright-report/
+    expire_in: 1 week
+
+
+.build_template:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - echo "🐳 Construction de l'image $APP_NAME..."
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA -t $IMAGE_NAME:latest $CONTEXT_DIR/
+    - echo "⬆️ Envoi vers le registre..."
+    - docker push $IMAGE_NAME --all-tags
+
+build-api:
+  extends: .build_template
+  variables:
+    APP_NAME: "API"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/api  
+    CONTEXT_DIR: api                    
+  rules:
+    - changes: [api/**/*, .gitlab-ci.yml]
+
+build-front:
+  extends: .build_template
+  variables:
+    APP_NAME: "Front"
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/front 
+    CONTEXT_DIR: front                   
+  rules:
+    - changes: [front/**/*, .gitlab-ci.yml]
+
+deploy-production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    - apk add --no-cache openssh-client gettext
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+  script:
+    - echo "🚀 Préparation du déploiement..."
+    
+    - envsubst < docker-stack.yml > docker-stack-deployed.yml
+    - ssh $SSH_USER@$SSH_HOST "mkdir -p ~/database"
+    - scp docker-stack-deployed.yml $SSH_USER@$SSH_HOST:~/docker-stack.yml
+    - scp database/init.sql $SSH_USER@$SSH_HOST:~/database/init.sql
+    - ssh $SSH_USER@$SSH_HOST "
+        echo '🔑 Login au registre...';
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
+        
+        echo '🚀 Déploiement de la Stack...';
+        docker stack deploy -c docker-stack.yml forum-stack;
+        
+        echo '🧹 Nettoyage...';
+        docker image prune -af;
+      "
+  environment:
+    name: production
+    url: http://$SSH_HOST
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"

@@ -1,13 +1,13 @@
 services:
   db:
     container_name: forumDB
-    image: postgres:latest
+    image: postgres:15
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: forumdb
     networks:
-      - internal
+      - data_layer
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
       - db-data:/var/lib/postgresql/data
@@ -18,7 +18,7 @@ services:
     container_name: forum_api
     build: ./api
     networks:
-      - internal
+      - data_layer
       - frontend
     depends_on:
       - db
@@ -26,31 +26,20 @@ services:
       - "3000:3000"
     env_file:
       - .env
-
-  thread:
-    container_name: forum_thread
-    build: ./thread
+  front:
+    container_name: forum_front
+    build: ./front
     ports:
       - "80:80"
-    depends_on:
-      - api
     networks:
       - frontend
-
-  sender:
-    container_name: forum_sender
-    build: ./sender
-    ports:
-      - "8080:8080"
-    depends_on:
-      - api
-    networks:
-      - frontend
+    volumes:
+      - ./front:/app
+      - /app/node_modules
 
 networks:
-  internal:
+  data_layer:
     driver: bridge
-    internal: true
   frontend:
     driver: bridge
 volumes:

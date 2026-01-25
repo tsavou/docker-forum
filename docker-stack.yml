@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: forumdb
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    configs:
+      - source: db-init-script
+        target: /docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-net
+
+  api:
+    image: ${CI_REGISTRY_IMAGE}/api:latest
+    environment:
+      DATABASE_URL: postgres://user:password@db:5432/forumdb
+      PORT: 3000
+    networks:
+      - app-net
+    ports:
+      - target: 3000
+        published: 3000
+        mode: host
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+        failure_action: rollback
+
+  front:
+    image: ${CI_REGISTRY_IMAGE}/front:latest
+    networks:
+      - app-net
+    ports:
+      - target: 80
+        published: 80
+        mode: host
+    deploy:
+      replicas: 1
+      update_config:
+        order: start-first
+        failure_action: rollback
+
+volumes:
+  db-data:
+
+networks:
+  app-net:
+    driver: overlay
+
+configs:
+  db-init-script:
+    file: ./database/init.sql
