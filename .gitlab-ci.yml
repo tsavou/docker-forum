@@ -132,10 +132,10 @@ deploy-production:
     - echo "🚀 Préparation du déploiement..."
     
     - envsubst < docker-stack.yml > docker-stack-deployed.yml
-    - ssh $SSH_USER@$SSH_HOST "mkdir -p ~/database"
-    - scp docker-stack-deployed.yml $SSH_USER@$SSH_HOST:~/docker-stack.yml
-    - scp database/init.sql $SSH_USER@$SSH_HOST:~/database/init.sql
-    - ssh $SSH_USER@$SSH_HOST "
+    - ssh root@$SSH_HOST "mkdir -p ~/database"
+    - scp docker-stack-deployed.yml root@$SSH_HOST:~/docker-stack.yml
+    - scp database/init.sql root@$SSH_HOST:~/database/init.sql
+    - ssh root@$SSH_HOST "
         echo '🔑 Login au registre...';
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
         
