@@ -14,6 +14,8 @@ services:
         target: /docker-entrypoint-initdb.d/init.sql
     networks:
       - app-net
+    deploy:
+      endpoint_mode: dnsrr
 
   api:
     image: ${CI_REGISTRY_IMAGE}/api:latest
