@@ -6,14 +6,15 @@ import axios from 'axios';
 const pseudo = ref('');
 const message = ref('');
 const messages = ref([]);
-const isSending = ref(false); // Pour gérer l'état du bouton
+const isSending = ref(false);
+
+const API_URL = `http://${window.location.hostname}:3000`;
 
 // --- Actions ---
 
 const fetchMessages = async () => {
   try {
-    const response = await axios.get('http://localhost:3000/messages');
-    // On inverse l'ordre pour voir les nouveaux messages en haut (optionnel)
+    const response = await axios.get(`${API_URL}/messages`);
     messages.value = response.data.reverse();
   } catch (error) {
     console.error('Erreur lors de la récupération des messages:', error);
@@ -25,7 +26,7 @@ const sendMessage = async () => {
 
   isSending.value = true;
   try {
-    await axios.post('http://localhost:3000/messages', {
+    await axios.post(`${API_URL}/messages`, {
       pseudo: pseudo.value,
       message: message.value,
     });
@@ -326,7 +327,7 @@ onMounted(() => {
   color: #4b5563;
   line-height: 1.6;
   margin: 0;
-  white-space: pre-wrap; /* Préserve les retours à la ligne */
+  white-space: pre-wrap;
 }
 
 .empty-state {
